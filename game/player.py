@@ -16,7 +16,8 @@ class Player:
         max_energy,
         max_nerve,
         last_energy_update,
-        last_nerve_update
+        last_nerve_update,
+        xp
     ):
         
         self.id = player_id
@@ -35,6 +36,7 @@ class Player:
         self.max_nerve = max_nerve
         self.last_energy_update = last_energy_update
         self.last_nerve_update = last_nerve_update
+        self.xp = xp
 
 
 
@@ -42,6 +44,7 @@ class Player:
         print("\n===== CHARACTER =====")
         print("Name:", self.name)
         print("Level:", self.level)
+        print("XP:", self.xp)
         print("Money:", self.money)
         print("Health: ", self.health)
         print(f"Energy: {self.energy}/{self.max_energy}")

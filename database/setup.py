@@ -21,6 +21,7 @@ def create_tables():
             user_id INTEGER NOT NULL UNIQUE,
             name TEXT NOT NULL,
             level INTEGER DEFAULT 1,
+            xp INTEGER NOT NULL DEFAULT 0,
             money INTEGER DEFAULT 500,
             health INTEGER DEFAULT 100,
             energy INTEGER DEFAULT 100,
