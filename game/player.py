@@ -12,8 +12,13 @@ class Player:
         defence,
         speed,
         dexterity,
-        nerve
+        nerve,
+        max_energy,
+        max_nerve,
+        last_energy_update,
+        last_nerve_update
     ):
+        
         self.id = player_id
         self.user_id = user_id
         self.name = name
@@ -26,6 +31,11 @@ class Player:
         self.speed = speed
         self.dexterity = dexterity
         self.nerve = nerve
+        self.max_energy = max_energy
+        self.max_nerve = max_nerve
+        self.last_energy_update = last_energy_update
+        self.last_nerve_update = last_nerve_update
+
 
 
     def show_stats(self):
@@ -33,9 +43,9 @@ class Player:
         print("Name:", self.name)
         print("Level:", self.level)
         print("Money:", self.money)
-        print("Energy:", self.energy)
-        print("Nerve:", self.nerve)
-
+        print("Health: ", self.health)
+        print(f"Energy: {self.energy}/{self.max_energy}")
+        print(f"Nerve: {self.nerve}/{self.max_nerve}")
         print("\n===== BATTLE STATS =====")
 
         print("Strength:", self.strength)

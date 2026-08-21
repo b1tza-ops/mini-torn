@@ -28,6 +28,11 @@ def create_tables():
             defence INTEGER DEFAULT 10,
             speed INTEGER DEFAULT 10,
             dexterity INTEGER DEFAULT 10,
+            nerve INTEGER DEFAULT 20,
+            max_energy INTEGER NOT NULL DEFAULT 100,
+            max_nerve INTEGER NOT NULL DEFAULT 20,
+            last_energy_update TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            last_nerve_update TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
             FOREIGN KEY (user_id)
                 REFERENCES users(id)
@@ -35,5 +40,6 @@ def create_tables():
         )
     """)
 
+    
     conn.commit()
     conn.close()
