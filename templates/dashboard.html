@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Smoke</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <header>
+        <h1>THE SMOKE</h1>
+
+        <a href="/logout">
+            Logout
+        </a>
+    </header>
+
+    <div class="stats">
+
+        <div>
+            <strong>{{ player.name }}</strong>
+            <span>Level {{ player.level }}</span>
+        </div>
+
+        <div>
+            Health
+            <strong>{{ player.health }}</strong>
+        </div>
+
+        <div>
+            Energy
+            <strong>{{ player.energy }}</strong>
+        </div>
+
+        <div>
+            Nerve
+            <strong>{{ player.nerve }}</strong>
+        </div>
+
+        <div>
+            Cash
+            <strong>£{{ player.money }}</strong>
+        </div>
+
+    </div>
+
+    <div class="menu">
+
+        <button>Character</button>
+        <button>Gym</button>
+        <button>Crimes</button>
+        <button>Jobs</button>
+        <button>Inventory</button>
+
+    </div>
+
+    <section class="panel">
+
+        <h2>Welcome to London</h2>
+
+        <p>
+            The city is yours to explore.
+            Build your reputation, train your character,
+            make money and rise through The Smoke.
+        </p>
+
+    </section>
+
+</div>
+
+</body>
+</html>

@@ -20,6 +20,9 @@ def gym_menu(player):
         elif choice == "3":
             train(player, "speed")
 
+        elif choice == "4":
+            train(player, "dexterity")
+
         elif choice == "5":
             break
 
@@ -36,14 +39,20 @@ def train(player, stat):
     
     player.energy -= energy_cost
 
-    if stat == "strenght":
-        player.strenght += stat_gain
+    if stat == "strength":
+        player.strength += stat_gain
 
     elif stat == "defence":
         player.defence += stat_gain
 
     elif stat == "speed":
         player.speed += stat_gain
+
+    elif stat == "dexterity":
+        player.dexterity += stat_gain
+
+    else:
+        raise ValueError(f"Unknown battle stat: {stat}")
 
     print("\nTraining complete!")
     print(stat.capitalize(), "+", stat_gain)
