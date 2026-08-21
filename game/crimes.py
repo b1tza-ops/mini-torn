@@ -76,11 +76,8 @@ def commit_crime(
         print("You made £", reward)
 
     else:
-        damage = random.randint(5,15)
-        player.health -= damage
-
-        if player.health < 0:
-            player.healt = 0
+        damage = random.randint(5, 15)
+        player.health = max(0, player.health - damage)
 
         print("Crime Failed!")
         print("You lost", damage, "health")

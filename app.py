@@ -1,3 +1,6 @@
+import os
+import secrets
+
 from flask import Flask, render_template, request, redirect, session
 
 from database.setup import create_tables
@@ -9,7 +12,11 @@ from game.player import Player
 
 app = Flask(__name__)
 
-app.secret_key = "dev-secret-change-later"
+app.config.update(
+    SECRET_KEY=os.environ.get("THE_SMOKE_SECRET_KEY") or secrets.token_hex(32),
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
 
 create_tables()
 
@@ -65,4 +72,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=os.environ.get("FLASK_DEBUG") == "1")
