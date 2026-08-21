@@ -85,7 +85,7 @@ def commit_crime(
 
         if levels_gained > 0:
             print(
-                f"Level up ! You are now level {player.level}"
+                f"Level up! You are now level {player.level}."
             )
 
     else:
