@@ -59,7 +59,8 @@ def get_player_by_user_id(user_id):
             max_energy,
             max_nerve,
             last_energy_update,
-            last_nerve_update
+            last_nerve_update,
+            xp
         FROM players
         WHERE user_id = ?
         """,
@@ -144,7 +145,8 @@ def save_player(player):
             max_energy = ?,
             max_nerve = ?,
             last_energy_update = ?,
-            last_nerve_update = ?
+            last_nerve_update = ?,
+            xp = ?
         WHERE id = ?
         """,
         (
@@ -162,6 +164,7 @@ def save_player(player):
             player.max_nerve,
             player.last_energy_update,
             player.last_nerve_update,
+            player.xp,
             player.id
         )
     )

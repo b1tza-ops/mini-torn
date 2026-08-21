@@ -39,12 +39,38 @@ class CrimeTests(unittest.TestCase):
             name="Test crime",
             nerve_cost=2,
             success_chance=0,
+            xp_reward=10,
             min_reward=1,
             max_reward=1,
         )
 
         self.assertEqual(player.health, 0)
         self.assertEqual(player.nerve, 18)
+
+    @patch("game.crimes.random.randint", side_effect=[1, 40])
+    def test_successful_crime_awards_money_xp_and_level(self, _randint):
+        player = SimpleNamespace(
+            nerve=20,
+            money=0,
+            health=100,
+            xp=95,
+            level=1,
+        )
+
+        commit_crime(
+            player,
+            name="Test crime",
+            nerve_cost=2,
+            success_chance=100,
+            xp_reward=10,
+            min_reward=20,
+            max_reward=60,
+        )
+
+        self.assertEqual(player.nerve, 18)
+        self.assertEqual(player.money, 40)
+        self.assertEqual(player.xp, 105)
+        self.assertEqual(player.level, 2)
 
 
 if __name__ == "__main__":

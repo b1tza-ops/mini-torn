@@ -1,4 +1,5 @@
 import random
+from game.progression import award_xp
 
 
 def crimes_menu(player):
@@ -20,7 +21,8 @@ def crimes_menu(player):
                 nerve_cost=2,
                 success_chance=80,
                 min_reward=20,
-                max_reward=60
+                max_reward=60,
+                xp_reward=10,
             )
 
         elif choice == "2":
@@ -30,7 +32,8 @@ def crimes_menu(player):
                 nerve_cost=4,
                 success_chance=65,
                 min_reward=50,
-                max_reward=150
+                max_reward=150,
+                xp_reward=25,
             )
 
         elif choice == "3":
@@ -40,7 +43,8 @@ def crimes_menu(player):
                 nerve_cost=8,
                 success_chance=40,
                 min_reward=200,
-                max_reward=600
+                max_reward=600,
+                xp_reward=60
             )
 
         elif choice == "4":
@@ -55,6 +59,7 @@ def commit_crime(
     name,
     nerve_cost,
     success_chance,
+    xp_reward,
     min_reward,
     max_reward
 ):
@@ -70,10 +75,18 @@ def commit_crime(
 
     if roll <= success_chance:
         reward = random.randint(min_reward, max_reward)
+
         player.money += reward
+        levels_gained = award_xp(player, xp_reward)
 
         print("Crime successful!")
         print("You made £", reward)
+        print("XP +", xp_reward)
+
+        if levels_gained > 0:
+            print(
+                f"Level up ! You are now level {player.level}"
+            )
 
     else:
         damage = random.randint(5, 15)
