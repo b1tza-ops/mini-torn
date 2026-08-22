@@ -3,160 +3,432 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#090b0d">
+    <meta name="theme-color" content="#080b0e">
+    <meta name="color-scheme" content="dark">
     <title>{{ player.name }} · The Smoke</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
 </head>
 
-<body class="dashboard-page">
+<body class="dashboard-v2">
+    <svg class="svg-sprite" aria-hidden="true">
+        <symbol id="icon-grid" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="2"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="2"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="2"></rect>
+        </symbol>
+        <symbol id="icon-user" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path>
+        </symbol>
+        <symbol id="icon-dumbbell" viewBox="0 0 24 24">
+            <path d="M3 9v6M6 7v10M18 7v10M21 9v6M6 12h12"></path>
+        </symbol>
+        <symbol id="icon-mask" viewBox="0 0 24 24">
+            <path d="M4 5.5c2.3 1 4.9 1.5 8 1.5s5.7-.5 8-1.5V12c0 5-3.6 8-8 9-4.4-1-8-4-8-9V5.5Z"></path>
+            <path d="M7.5 11.5c1.3-.7 2.5-.7 3.5 0M13 11.5c1-.7 2.2-.7 3.5 0M9 16c2 .8 4 .8 6 0"></path>
+        </symbol>
+        <symbol id="icon-briefcase" viewBox="0 0 24 24">
+            <rect x="3" y="7" width="18" height="13" rx="2"></rect>
+            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18M10 12v2h4v-2"></path>
+        </symbol>
+        <symbol id="icon-bag" viewBox="0 0 24 24">
+            <path d="M5 8h14l1 13H4L5 8Z"></path>
+            <path d="M9 9V6a3 3 0 0 1 6 0v3"></path>
+        </symbol>
+        <symbol id="icon-map" viewBox="0 0 24 24">
+            <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"></path>
+            <path d="M9 3v15M15 6v15"></path>
+        </symbol>
+        <symbol id="icon-slots" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="17" rx="3"></rect>
+            <path d="M7 8h10M8 13h.01M12 13h.01M16 13h.01M7 17h10"></path>
+        </symbol>
+        <symbol id="icon-bolt" viewBox="0 0 24 24">
+            <path d="m13 2-8 12h7l-1 8 8-12h-7l1-8Z"></path>
+        </symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24">
+            <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"></path>
+        </symbol>
+        <symbol id="icon-shield" viewBox="0 0 24 24">
+            <path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"></path>
+        </symbol>
+        <symbol id="icon-chevron" viewBox="0 0 24 24">
+            <path d="m9 18 6-6-6-6"></path>
+        </symbol>
+        <symbol id="icon-menu" viewBox="0 0 24 24">
+            <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </symbol>
+        <symbol id="icon-close" viewBox="0 0 24 24">
+            <path d="m6 6 12 12M18 6 6 18"></path>
+        </symbol>
+    </svg>
+
     <div class="atmosphere atmosphere--one" aria-hidden="true"></div>
     <div class="atmosphere atmosphere--two" aria-hidden="true"></div>
+    <div class="city-grid" aria-hidden="true"></div>
 
-    <div class="app-shell">
-        <header class="topbar">
-            <a class="brand" href="{{ url_for('home') }}" aria-label="The Smoke dashboard">
-                <span class="brand__mark">TS</span>
-                <span class="brand__name">The Smoke</span>
-            </a>
-
-            <div class="topbar__right">
-                <div class="world-status">
-                    <span class="status-dot" aria-hidden="true"></span>
-                    <span>London</span>
-                    <span class="world-status__label">Online</span>
-                </div>
-                <a class="logout-link" href="{{ url_for('logout') }}">Log out</a>
+    <div
+        class="game-shell"
+        id="gameApp"
+        data-player-id="{{ player.id }}"
+        data-player-name="{{ player.name | e }}"
+        data-level="{{ player.level }}"
+        data-xp="{{ player.xp }}"
+        data-next-level-xp="{{ dashboard.next_level_xp }}"
+        data-money="{{ player.money }}"
+        data-health="{{ player.health }}"
+        data-energy="{{ player.energy }}"
+        data-max-energy="{{ player.max_energy }}"
+        data-nerve="{{ player.nerve }}"
+        data-max-nerve="{{ player.max_nerve }}"
+        data-wanted="{{ player.wanted_level }}"
+        data-strength="{{ player.strength }}"
+        data-defence="{{ player.defence }}"
+        data-speed="{{ player.speed }}"
+        data-dexterity="{{ player.dexterity }}"
+        data-jail-until="{{ player.jail_until or '' }}"
+        data-hospital-until="{{ player.hospital_until or '' }}"
+    >
+        <aside class="game-sidebar" id="gameSidebar">
+            <div class="sidebar-brand">
+                <span class="sidebar-brand__mark">TS</span>
+                <span>
+                    <strong>The Smoke</strong>
+                    <small>London never sleeps</small>
+                </span>
             </div>
-        </header>
 
-        <main class="dashboard-main">
-            <section class="player-hero" aria-labelledby="player-name">
-                <div class="player-hero__identity">
-                    <p class="eyebrow">Active character</p>
-                    <h1 id="player-name">{{ player.name }}</h1>
-                    <div class="identity-meta">
-                        <span class="level-badge">Level {{ player.level }}</span>
-                        <span>£{{ "{:,}".format(player.money) }} cash</span>
-                    </div>
+            <nav class="primary-nav" aria-label="Game navigation">
+                <p class="nav-label">Player</p>
+                <button class="nav-button is-active" type="button" data-view-target="overview">
+                    <svg><use href="#icon-grid"></use></svg>
+                    <span>Overview</span>
+                </button>
+                <button class="nav-button" type="button" data-view-target="character">
+                    <svg><use href="#icon-user"></use></svg>
+                    <span>Character</span>
+                </button>
+
+                <p class="nav-label">London</p>
+                <button class="nav-button" type="button" data-view-target="gym">
+                    <svg><use href="#icon-dumbbell"></use></svg>
+                    <span>Gym</span>
+                </button>
+                <button class="nav-button" type="button" data-view-target="crimes">
+                    <svg><use href="#icon-mask"></use></svg>
+                    <span>Crimes</span>
+                    <span class="nav-badge" data-bind="nerve">0</span>
+                </button>
+                <button class="nav-button" type="button" data-view-target="jobs">
+                    <svg><use href="#icon-briefcase"></use></svg>
+                    <span>Jobs</span>
+                </button>
+                <button class="nav-button" type="button" data-view-target="inventory">
+                    <svg><use href="#icon-bag"></use></svg>
+                    <span>Inventory</span>
+                    <span class="nav-badge" id="inventoryCount">0</span>
+                </button>
+                <button class="nav-button" type="button" data-view-target="city">
+                    <svg><use href="#icon-map"></use></svg>
+                    <span>City map</span>
+                </button>
+                <button class="nav-button" type="button" data-view-target="casino">
+                    <svg><use href="#icon-slots"></use></svg>
+                    <span>Casino</span>
+                    <span class="nav-tag">Beta</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-profile">
+                <span class="avatar" data-player-initial>P</span>
+                <span class="sidebar-profile__copy">
+                    <strong data-bind="name">Player</strong>
+                    <small>Level <span data-bind="level">1</span></small>
+                </span>
+                <a class="icon-link" href="{{ url_for('logout') }}" title="Log out" aria-label="Log out">↗</a>
+            </div>
+        </aside>
+
+        <div class="sidebar-scrim" id="sidebarScrim" aria-hidden="true"></div>
+
+        <section class="game-workspace">
+            <header class="game-topbar">
+                <button class="mobile-menu-button" id="mobileMenuButton" type="button" aria-label="Open navigation" aria-expanded="false">
+                    <svg><use href="#icon-menu"></use></svg>
+                </button>
+
+                <div class="location-pill">
+                    <span class="online-dot" aria-hidden="true"></span>
+                    <span>London</span>
+                    <span class="location-pill__district" id="currentDistrict">Camden</span>
                 </div>
 
-                <div class="xp-card">
-                    <div class="progress-heading">
-                        <span>Level progress</span>
-                        <strong>{{ player.xp }} / {{ dashboard.next_level_xp }} XP</strong>
-                    </div>
-                    <div class="progress-track" role="progressbar"
-                         aria-label="Experience progress"
-                         aria-valuenow="{{ dashboard.xp_percent }}"
-                         aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-fill progress-fill--xp"
-                              style="--progress: {{ dashboard.xp_percent }}%"></span>
-                    </div>
-                    <p>{{ dashboard.next_level_xp - player.xp }} XP until level {{ player.level + 1 }}</p>
+                <div class="topbar-wallet">
+                    <span>Available cash</span>
+                    <strong data-money>£0</strong>
                 </div>
-            </section>
+            </header>
 
-            <section class="resource-grid" aria-label="Player resources">
-                <article class="resource-card resource-card--health">
-                    <div class="resource-card__header">
-                        <span class="resource-icon" aria-hidden="true">+</span>
-                        <span>Health</span>
-                        <strong>{{ player.health }}/100</strong>
+            <main class="game-content" id="mainContent">
+                <section class="restriction-banner" id="restrictionBanner" hidden aria-live="polite">
+                    <span class="restriction-banner__icon">!</span>
+                    <div>
+                        <strong id="restrictionTitle">Movement restricted</strong>
+                        <p id="restrictionMessage">Your actions are temporarily limited.</p>
                     </div>
-                    <div class="progress-track progress-track--thin" role="progressbar"
-                         aria-label="Health" aria-valuenow="{{ dashboard.health_percent }}"
-                         aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-fill" style="--progress: {{ dashboard.health_percent }}%"></span>
-                    </div>
-                </article>
+                    <time id="restrictionCountdown">00:00</time>
+                </section>
 
-                <article class="resource-card resource-card--energy">
-                    <div class="resource-card__header">
-                        <span class="resource-icon" aria-hidden="true">ϟ</span>
-                        <span>Energy</span>
-                        <strong>{{ player.energy }}/{{ player.max_energy }}</strong>
-                    </div>
-                    <div class="progress-track progress-track--thin" role="progressbar"
-                         aria-label="Energy" aria-valuenow="{{ dashboard.energy_percent }}"
-                         aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-fill" style="--progress: {{ dashboard.energy_percent }}%"></span>
-                    </div>
-                </article>
-
-                <article class="resource-card resource-card--nerve">
-                    <div class="resource-card__header">
-                        <span class="resource-icon" aria-hidden="true">◆</span>
-                        <span>Nerve</span>
-                        <strong>{{ player.nerve }}/{{ player.max_nerve }}</strong>
-                    </div>
-                    <div class="progress-track progress-track--thin" role="progressbar"
-                         aria-label="Nerve" aria-valuenow="{{ dashboard.nerve_percent }}"
-                         aria-valuemin="0" aria-valuemax="100">
-                        <span class="progress-fill" style="--progress: {{ dashboard.nerve_percent }}%"></span>
-                    </div>
-                </article>
-            </section>
-
-            <div class="dashboard-columns">
-                <section class="action-panel" aria-labelledby="actions-title">
-                    <div class="section-heading">
+                <section class="game-view is-active" data-view="overview" aria-labelledby="overview-title">
+                    <header class="view-hero">
                         <div>
-                            <p class="eyebrow">City access</p>
-                            <h2 id="actions-title">Choose your next move</h2>
+                            <p class="eyebrow">Saturday night · London</p>
+                            <h1 id="overview-title">Welcome back, <span data-bind="name">Player</span>.</h1>
+                            <p>Your name is travelling through the boroughs. Decide what happens next.</p>
                         </div>
-                        <span class="section-note">Web actions coming soon</span>
+                        <button class="secondary-button" type="button" id="resetPrototype">Reset prototype</button>
+                    </header>
+
+                    <section class="level-card">
+                        <div class="level-card__number">
+                            <small>Level</small>
+                            <strong data-bind="level">1</strong>
+                        </div>
+                        <div class="level-card__progress">
+                            <div class="progress-copy">
+                                <span>Street experience</span>
+                                <strong><span data-bind="xp">0</span> / <span data-bind="nextLevelXp">100</span> XP</strong>
+                            </div>
+                            <div class="meter" aria-label="Level progress">
+                                <span class="meter__fill meter__fill--xp" data-meter="xp"></span>
+                            </div>
+                        </div>
+                        <div class="level-card__cash">
+                            <small>Cash on hand</small>
+                            <strong data-money>£0</strong>
+                        </div>
+                    </section>
+
+                    <section class="resource-grid" aria-label="Player resources">
+                        <article class="resource-card resource-card--health">
+                            <div class="resource-card__top">
+                                <span class="resource-card__icon"><svg><use href="#icon-heart"></use></svg></span>
+                                <span>Health</span>
+                                <strong><span data-bind="health">100</span>/100</strong>
+                            </div>
+                            <div class="meter meter--thin"><span class="meter__fill" data-meter="health"></span></div>
+                            <small>Physical condition</small>
+                        </article>
+                        <article class="resource-card resource-card--energy">
+                            <div class="resource-card__top">
+                                <span class="resource-card__icon"><svg><use href="#icon-bolt"></use></svg></span>
+                                <span>Energy</span>
+                                <strong><span data-bind="energy">100</span>/<span data-bind="maxEnergy">100</span></strong>
+                            </div>
+                            <div class="meter meter--thin"><span class="meter__fill" data-meter="energy"></span></div>
+                            <small>Used for gym training</small>
+                        </article>
+                        <article class="resource-card resource-card--nerve">
+                            <div class="resource-card__top">
+                                <span class="resource-card__icon">◆</span>
+                                <span>Nerve</span>
+                                <strong><span data-bind="nerve">20</span>/<span data-bind="maxNerve">20</span></strong>
+                            </div>
+                            <div class="meter meter--thin"><span class="meter__fill" data-meter="nerve"></span></div>
+                            <small>Used for criminal activity</small>
+                        </article>
+                        <article class="resource-card resource-card--wanted">
+                            <div class="resource-card__top">
+                                <span class="resource-card__icon">!</span>
+                                <span>Wanted</span>
+                                <strong><span data-bind="wanted">0</span>/100</strong>
+                            </div>
+                            <div class="meter meter--thin"><span class="meter__fill" data-meter="wanted"></span></div>
+                            <small data-wanted-label>Unknown to police</small>
+                        </article>
+                    </section>
+
+                    <div class="overview-layout">
+                        <section class="panel quick-actions" aria-labelledby="quick-actions-title">
+                            <div class="panel-heading">
+                                <div><p class="eyebrow">Next move</p><h2 id="quick-actions-title">Take action</h2></div>
+                                <span>Prototype mode</span>
+                            </div>
+                            <div class="quick-action-grid">
+                                <button class="quick-action quick-action--gym" type="button" data-view-target="gym">
+                                    <svg><use href="#icon-dumbbell"></use></svg>
+                                    <span><strong>Train at the gym</strong><small>Build your battle stats</small></span>
+                                    <svg class="quick-action__chevron"><use href="#icon-chevron"></use></svg>
+                                </button>
+                                <button class="quick-action quick-action--crime" type="button" data-view-target="crimes">
+                                    <svg><use href="#icon-mask"></use></svg>
+                                    <span><strong>Commit a crime</strong><small>Risk nerve for cash and XP</small></span>
+                                    <svg class="quick-action__chevron"><use href="#icon-chevron"></use></svg>
+                                </button>
+                                <button class="quick-action" type="button" data-view-target="jobs">
+                                    <svg><use href="#icon-briefcase"></use></svg>
+                                    <span><strong>Go to work</strong><small>Earn safe and steady cash</small></span>
+                                    <svg class="quick-action__chevron"><use href="#icon-chevron"></use></svg>
+                                </button>
+                                <button class="quick-action" type="button" data-view-target="city">
+                                    <svg><use href="#icon-map"></use></svg>
+                                    <span><strong>Explore London</strong><small>Discover districts and venues</small></span>
+                                    <svg class="quick-action__chevron"><use href="#icon-chevron"></use></svg>
+                                </button>
+                            </div>
+                        </section>
+
+                        <aside class="panel activity-panel" aria-labelledby="activity-title">
+                            <div class="panel-heading">
+                                <div><p class="eyebrow">Live feed</p><h2 id="activity-title">Recent activity</h2></div>
+                            </div>
+                            <ol class="activity-list" id="activityList"></ol>
+                        </aside>
                     </div>
 
-                    <div class="action-grid">
-                        <article class="action-card action-card--active">
-                            <span class="action-card__number">01</span>
-                            <div><h3>Character</h3><p>Review your progress and battle stats.</p></div>
-                            <span class="action-card__status">Active</span>
+                    <section class="district-strip" aria-label="London district heat">
+                        <article><span>Camden</span><strong>Familiar</strong><small>Low police attention</small></article>
+                        <article><span>Brixton</span><strong>Known</strong><small>Medium opportunity</small></article>
+                        <article><span>Soho</span><strong>Risky</strong><small>High-value territory</small></article>
+                        <button type="button" data-view-target="city">View city map <span>→</span></button>
+                    </section>
+                </section>
+
+                <section class="game-view" data-view="character" aria-labelledby="character-title" hidden>
+                    <header class="view-heading">
+                        <div><p class="eyebrow">Player profile</p><h1 id="character-title">Character</h1><p>Your progress, equipment and battle readiness.</p></div>
+                    </header>
+                    <div class="character-layout">
+                        <article class="panel identity-card">
+                            <div class="identity-card__avatar" data-player-initial>P</div>
+                            <p class="eyebrow">London resident</p>
+                            <h2 data-bind="name">Player</h2>
+                            <span class="status-chip">Level <span data-bind="level">1</span></span>
+                            <dl class="identity-facts">
+                                <div><dt>Cash</dt><dd data-money>£0</dd></div>
+                                <div><dt>Wanted</dt><dd><span data-bind="wanted">0</span>/100</dd></div>
+                                <div><dt>Location</dt><dd id="characterDistrict">Camden</dd></div>
+                                <div><dt>Occupation</dt><dd id="characterJob">Unemployed</dd></div>
+                            </dl>
                         </article>
-                        <article class="action-card">
-                            <span class="action-card__number">02</span>
-                            <div><h3>Gym</h3><p>Train strength, defence, speed and dexterity.</p></div>
-                            <span class="action-card__status">Terminal</span>
-                        </article>
-                        <article class="action-card">
-                            <span class="action-card__number">03</span>
-                            <div><h3>Crimes</h3><p>Risk your nerve for cash, XP and reputation.</p></div>
-                            <span class="action-card__status">Terminal</span>
-                        </article>
-                        <article class="action-card action-card--locked">
-                            <span class="action-card__number">04</span>
-                            <div><h3>Jobs &amp; inventory</h3><p>Build a career and manage your gear.</p></div>
-                            <span class="action-card__status">Soon</span>
-                        </article>
+                        <section class="panel battle-stats-panel">
+                            <div class="panel-heading"><div><p class="eyebrow">Combat profile</p><h2>Battle stats</h2></div><span id="battleTotal">40 total</span></div>
+                            <div class="battle-stat-list" id="battleStatList"></div>
+                            <div class="equipment-summary">
+                                <div><small>Weapon</small><strong id="equippedWeapon">Bare hands</strong></div>
+                                <div><small>Armour</small><strong id="equippedArmour">Street clothes</strong></div>
+                            </div>
+                        </section>
                     </div>
                 </section>
 
-                <aside class="side-stack">
-                    <section class="panel battle-panel" aria-labelledby="battle-title">
-                        <div class="section-heading section-heading--compact">
-                            <div><p class="eyebrow">Combat profile</p><h2 id="battle-title">Battle stats</h2></div>
-                        </div>
-                        <dl class="battle-list">
-                            <div><dt>Strength</dt><dd>{{ player.strength }}</dd></div>
-                            <div><dt>Defence</dt><dd>{{ player.defence }}</dd></div>
-                            <div><dt>Speed</dt><dd>{{ player.speed }}</dd></div>
-                            <div><dt>Dexterity</dt><dd>{{ player.dexterity }}</dd></div>
-                        </dl>
-                    </section>
+                <section class="game-view" data-view="gym" aria-labelledby="gym-title" hidden>
+                    <header class="view-heading view-heading--split">
+                        <div><p class="eyebrow">Ironworks Gym · Camden</p><h1 id="gym-title">Train harder.</h1><p>Spend energy to increase your battle statistics.</p></div>
+                        <div class="resource-pill resource-pill--energy"><svg><use href="#icon-bolt"></use></svg><span><small>Energy</small><strong><span data-bind="energy">100</span>/<span data-bind="maxEnergy">100</span></strong></span></div>
+                    </header>
+                    <div class="gym-layout">
+                        <section class="training-grid" id="trainingGrid"></section>
+                        <aside class="panel venue-card">
+                            <span class="venue-card__tag">Current gym</span>
+                            <h2>Ironworks</h2>
+                            <p>A bare-bones railway-arch gym where reputations are built one set at a time.</p>
+                            <dl><div><dt>Membership</dt><dd>Free</dd></div><div><dt>Training bonus</dt><dd>+0%</dd></div><div><dt>District</dt><dd>Camden</dd></div></dl>
+                            <button class="secondary-button secondary-button--wide" type="button" disabled>More gyms coming soon</button>
+                        </aside>
+                    </div>
+                </section>
 
-                    <section class="panel dispatch-panel" aria-labelledby="dispatch-title">
-                        <p class="eyebrow">City dispatch</p>
-                        <h2 id="dispatch-title">Welcome back to London</h2>
-                        <p>Your resources recovered while you were away. Keep building momentum—every choice shapes your path through The Smoke.</p>
-                    </section>
-                </aside>
-            </div>
-        </main>
+                <section class="game-view" data-view="crimes" aria-labelledby="crimes-title" hidden>
+                    <header class="view-heading view-heading--split">
+                        <div><p class="eyebrow">London underworld</p><h1 id="crimes-title">Crimes</h1><p>Choose the risk. Live with the consequence.</p></div>
+                        <div class="resource-pill resource-pill--nerve"><span class="diamond">◆</span><span><small>Nerve</small><strong><span data-bind="nerve">20</span>/<span data-bind="maxNerve">20</span></strong></span></div>
+                    </header>
+                    <div class="filter-row" id="crimeFilters" aria-label="Filter crimes by district"></div>
+                    <div class="crime-grid" id="crimeGrid"></div>
+                </section>
 
-        <footer class="app-footer">
-            <span>The Smoke · V1 development build</span>
-            <span>Progress saves automatically</span>
-        </footer>
+                <section class="game-view" data-view="jobs" aria-labelledby="jobs-title" hidden>
+                    <header class="view-heading view-heading--split">
+                        <div><p class="eyebrow">Legitimate work</p><h1 id="jobs-title">Jobs</h1><p>Earn clean money, unlock promotions and build experience.</p></div>
+                        <div class="job-status" id="activeJobStatus"><small>Current position</small><strong>Unemployed</strong></div>
+                    </header>
+                    <div class="job-grid" id="jobGrid"></div>
+                </section>
+
+                <section class="game-view" data-view="inventory" aria-labelledby="inventory-title" hidden>
+                    <header class="view-heading view-heading--split">
+                        <div><p class="eyebrow">Personal storage</p><h1 id="inventory-title">Inventory</h1><p>Use consumables and equip items before heading out.</p></div>
+                        <div class="inventory-capacity"><small>Capacity</small><strong><span id="inventoryCapacity">0</span>/20</strong></div>
+                    </header>
+                    <div class="filter-row" id="inventoryFilters" aria-label="Filter inventory"></div>
+                    <div class="inventory-layout">
+                        <div class="inventory-grid" id="inventoryGrid"></div>
+                        <aside class="panel loadout-panel">
+                            <p class="eyebrow">Current loadout</p>
+                            <h2>Equipped</h2>
+                            <div class="loadout-slot"><span>Weapon</span><strong id="loadoutWeapon">Bare hands</strong></div>
+                            <div class="loadout-slot"><span>Armour</span><strong id="loadoutArmour">Street clothes</strong></div>
+                        </aside>
+                    </div>
+                </section>
+
+                <section class="game-view" data-view="city" aria-labelledby="city-title" hidden>
+                    <header class="view-heading">
+                        <div><p class="eyebrow">Greater London</p><h1 id="city-title">The city</h1><p>Each district offers different opportunities, risks and rewards.</p></div>
+                    </header>
+                    <div class="city-layout">
+                        <section class="london-map" aria-label="Stylised map of available London districts">
+                            <div class="river-thames" aria-hidden="true"></div>
+                            <button class="map-node map-node--camden is-current" type="button" data-district="Camden"><span></span><strong>Camden</strong><small>Current location</small></button>
+                            <button class="map-node map-node--soho" type="button" data-district="Soho"><span></span><strong>Soho</strong><small>Nightlife district</small></button>
+                            <button class="map-node map-node--brixton" type="button" data-district="Brixton"><span></span><strong>Brixton</strong><small>Street territory</small></button>
+                            <span class="map-locked map-locked--hackney">Hackney · Locked</span>
+                            <span class="map-locked map-locked--city">The City · Locked</span>
+                        </section>
+                        <aside class="panel district-details" id="districtDetails"></aside>
+                    </div>
+                </section>
+
+                <section class="game-view" data-view="casino" aria-labelledby="casino-title" hidden>
+                    <header class="view-heading">
+                        <div><p class="eyebrow">Lucky Shot · Soho</p><h1 id="casino-title">The Smoke Slots</h1><p>A frontend prototype using fictional in-game cash.</p></div>
+                    </header>
+                    <div class="casino-layout">
+                        <section class="slot-machine">
+                            <div class="slot-machine__top">
+                                <span>LUCKY SHOT CASINO</span>
+                                <strong data-money>£0</strong>
+                            </div>
+                            <div class="slot-reels" id="slotReels" aria-label="Slot machine reels">
+                                <span class="slot-reel">7</span><span class="slot-reel">£</span><span class="slot-reel">♛</span>
+                            </div>
+                            <p class="slot-result" id="slotResult" aria-live="polite">Select a stake and spin.</p>
+                            <div class="bet-selector" id="betSelector" aria-label="Select slot stake"></div>
+                            <button class="spin-button" id="spinButton" type="button">Spin reels</button>
+                        </section>
+                        <aside class="panel paytable-panel">
+                            <p class="eyebrow">Payouts</p><h2>Pay table</h2>
+                            <dl><div><dt>7 · 7 · 7</dt><dd>10× stake</dd></div><div><dt>£ · £ · £</dt><dd>6× stake</dd></div><div><dt>Any triple</dt><dd>4× stake</dd></div><div><dt>Any pair</dt><dd>2× stake</dd></div></dl>
+                            <p>Prototype only. No real currency, purchases or withdrawals.</p>
+                        </aside>
+                    </div>
+                </section>
+            </main>
+        </section>
+
+        <nav class="mobile-nav" aria-label="Mobile game navigation">
+            <button class="is-active" type="button" data-view-target="overview"><svg><use href="#icon-grid"></use></svg><span>Home</span></button>
+            <button type="button" data-view-target="crimes"><svg><use href="#icon-mask"></use></svg><span>Crimes</span></button>
+            <button type="button" data-view-target="gym"><svg><use href="#icon-dumbbell"></use></svg><span>Gym</span></button>
+            <button type="button" data-view-target="city"><svg><use href="#icon-map"></use></svg><span>City</span></button>
+            <button type="button" data-view-target="inventory"><svg><use href="#icon-bag"></use></svg><span>Items</span></button>
+        </nav>
     </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
