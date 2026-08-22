@@ -1,6 +1,38 @@
 from database.connection import get_connection
 
 
+PLAYER_STATUS_COLUMNS = {
+    "wanted_level": "INTEGER NOT NULL DEFAULT 0 CHECK (wanted_level >= 0)",
+    "last_wanted_update": "TEXT",
+    "jail_until": "TEXT",
+    "hospital_until": "TEXT",
+}
+
+
+def ensure_player_status_columns(cursor):
+    existing_columns = {
+        row[1]
+        for row in cursor.execute("PRAGMA table_info(players)")
+    }
+
+    for column_name, definition in PLAYER_STATUS_COLUMNS.items():
+        if column_name not in existing_columns:
+            cursor.execute(
+                f"""
+                ALTER TABLE players
+                ADD COLUMN {column_name} {definition}
+                """
+            )
+
+    cursor.execute(
+        """
+        UPDATE players
+        SET last_wanted_update = CURRENT_TIMESTAMP
+        WHERE last_wanted_update IS NULL
+        """
+    )
+
+
 def create_tables():
     conn = get_connection()
     cursor = conn.cursor()
@@ -34,12 +66,17 @@ def create_tables():
             max_nerve INTEGER NOT NULL DEFAULT 20,
             last_energy_update TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             last_nerve_update TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            wanted_level INTEGER NOT NULL DEFAULT 0 CHECK (wanted_level >= 0),
+            last_wanted_update TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            jail_until TEXT,
+            hospital_until TEXT,
 
             FOREIGN KEY (user_id)
                 REFERENCES users(id)
                 ON DELETE CASCADE
         )
     """)
+    ensure_player_status_columns(cursor)
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS player_crime_progress (

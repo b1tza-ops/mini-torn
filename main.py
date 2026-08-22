@@ -1,11 +1,17 @@
 from database.setup import create_tables
+
 from auth.register import register
 from auth.login import login
+
 from database.players import create_player, get_player_by_user_id, save_player
-from database.players import save_player
+
+
 from game.player import Player
 from game.gym  import gym_menu
 from game.crimes import crimes_menu
+from game.status import update_player_status
+
+
 
 def main():
     create_tables()
@@ -91,7 +97,18 @@ def load_or_create_player(user_id):
 
         print("\nCharacter created!")
 
-    return Player(*player_data)
+    player = Player(*player_data)
+    status_update = update_player_status(player)
+
+    save_player(player)
+
+    if status_update.released_from_jail:
+        print("\nYou have been released from jail.")
+
+    if status_update.discharged_from_hospital:
+        print("\nYou have been discharged from hospital.")
+
+    return player
 
 if __name__ == "__main__":
     main()

@@ -37,9 +37,16 @@ class CrimeTests(unittest.TestCase):
             health=5,
             xp=0,
             level=1,
+            crime_progress={},
+            district_reputation={},
+            wanted_level=0,
+            last_wanted_update=None,
+            jail_until=None,
+            hospital_until=None,
         )
+
         rng = Mock()
-        rng.randint.side_effect = [100, 10]
+        rng.randint.side_effect = [100, 100, 10]
 
         result = commit_crime(
             player,
@@ -59,7 +66,14 @@ class CrimeTests(unittest.TestCase):
             health=100,
             xp=95,
             level=1,
+            crime_progress={},
+            district_reputation={},
+            wanted_level=0,
+            last_wanted_update=None,
+            jail_until=None,
+            hospital_until=None,
         )
+
         rng = Mock()
         rng.randint.side_effect = [1, 40]
 

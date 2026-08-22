@@ -3,6 +3,12 @@ from dataclasses import dataclass
 
 from game.progression import award_xp
 
+from game.status import (
+    add_wanted,
+    send_to_hospital,
+    send_to_jail,
+)
+
 
 @dataclass(frozen=True)
 class CrimeDefinition:
@@ -16,6 +22,11 @@ class CrimeDefinition:
     xp_reward: int
     crime_xp_reward: int
     reputation_reward: int
+    wanted_gain: int
+    jail_chance: int
+    jail_seconds: int
+    hospital_chance: int
+    hospital_seconds: int
     min_damage: int = 5
     max_damage: int = 15
 
@@ -35,7 +46,10 @@ class CrimeResult:
     reputation_reward: int = 0
     damage: int = 0
     levels_gained: int = 0
-
+    wanted_gained: int = 0
+    consequence: str | None = None
+    jail_until: str | None = None
+    hospital_until: str | None = None
 
 CRIMES = (
     CrimeDefinition(
@@ -49,6 +63,12 @@ CRIMES = (
         xp_reward=10,
         crime_xp_reward=10,
         reputation_reward=2,
+        wanted_gain=1,
+        jail_chance=10,
+        jail_seconds=60,
+        hospital_chance=5,
+        hospital_seconds=60,
+
     ),
     CrimeDefinition(
         key="camden_market_stall",
@@ -61,8 +81,13 @@ CRIMES = (
         xp_reward=25,
         crime_xp_reward=18,
         reputation_reward=4,
+        wanted_gain=2,
+        jail_chance=15,
+        jail_seconds=120,
+        hospital_chance=8,
+        hospital_seconds=120,
     ),
-    CrimeDefinition(
+        CrimeDefinition(
         key="brixton_phone_snatch",
         name="Snatch a phone in Brixton",
         district="Brixton",
@@ -73,6 +98,11 @@ CRIMES = (
         xp_reward=15,
         crime_xp_reward=12,
         reputation_reward=3,
+        wanted_gain=2,
+        jail_chance=12,
+        jail_seconds=90,
+        hospital_chance=8,
+        hospital_seconds=120,
     ),
     CrimeDefinition(
         key="brixton_warehouse",
@@ -85,7 +115,13 @@ CRIMES = (
         xp_reward=55,
         crime_xp_reward=30,
         reputation_reward=7,
+        wanted_gain=5,
+        jail_chance=25,
+        jail_seconds=300,
+        hospital_chance=20,
+        hospital_seconds=300,
     ),
+
     CrimeDefinition(
         key="soho_pickpocket",
         name="Pickpocket in Soho",
@@ -97,6 +133,12 @@ CRIMES = (
         xp_reward=25,
         crime_xp_reward=18,
         reputation_reward=4,
+
+        wanted_gain=2,
+        jail_chance=15,
+        jail_seconds=120,
+        hospital_chance=8,
+        hospital_seconds=120,
     ),
     CrimeDefinition(
         key="soho_nightclub",
@@ -109,6 +151,11 @@ CRIMES = (
         xp_reward=65,
         crime_xp_reward=35,
         reputation_reward=8,
+        wanted_gain=6,
+        jail_chance=30,
+        jail_seconds=360,
+        hospital_chance=25,
+        hospital_seconds=420,
     ),
 )
 
@@ -119,7 +166,7 @@ def get_crime(crime_key):
     return CRIMES_BY_KEY[crime_key]
 
 
-def commit_crime(player, crime, rng=None):
+def commit_crime(player, crime, rng=None, now=None):
     if rng is None:
         rng = random
 
@@ -134,18 +181,38 @@ def commit_crime(player, crime, rng=None):
         )
 
     player.nerve -= crime.nerve_cost
-    progress = _crime_progress_for(player, crime.key)
+
+    progress = _crime_progress_for(
+        player,
+        crime.key,
+    )
     progress["attempts"] += 1
 
-    if rng.randint(1, 100) <= crime.success_chance:
-        reward = rng.randint(crime.min_reward, crime.max_reward)
+    add_wanted(
+        player,
+        amount=crime.wanted_gain,
+        now=now,
+    )
+
+    success_roll = rng.randint(1, 100)
+
+    if success_roll <= crime.success_chance:
+        reward = rng.randint(
+            crime.min_reward,
+            crime.max_reward,
+        )
+
         player.money += reward
-        levels_gained = award_xp(player, crime.xp_reward)
+        levels_gained = award_xp(
+            player,
+            crime.xp_reward,
+        )
 
         progress["xp"] += crime.crime_xp_reward
         progress["successes"] += 1
 
         reputation = _district_reputation_for(player)
+
         reputation[crime.district] = (
             reputation.get(crime.district, 0)
             + crime.reputation_reward
@@ -163,10 +230,89 @@ def commit_crime(player, crime, rng=None):
             crime_xp_reward=crime.crime_xp_reward,
             reputation_reward=crime.reputation_reward,
             levels_gained=levels_gained,
+            wanted_gained=crime.wanted_gain,
         )
 
-    damage = rng.randint(crime.min_damage, crime.max_damage)
-    player.health = max(0, player.health - damage)
+    return _resolve_failed_crime(
+        player=player,
+        crime=crime,
+        rng=rng,
+        now=now,
+    )
+
+
+def _resolve_failed_crime(
+    player,
+    crime,
+    rng,
+    now=None,
+):
+    consequence_roll = rng.randint(1, 100)
+
+    hospital_cutoff = crime.hospital_chance
+    jail_cutoff = (
+        crime.hospital_chance
+        + crime.jail_chance
+    )
+
+    if consequence_roll <= hospital_cutoff:
+        damage = rng.randint(
+            crime.min_damage,
+            crime.max_damage,
+        )
+
+        player.health = max(
+            0,
+            player.health - damage,
+        )
+
+        hospital_until = send_to_hospital(
+            player,
+            duration_seconds=crime.hospital_seconds,
+            now=now,
+        )
+
+        return CrimeResult(
+            attempted=True,
+            crime_key=crime.key,
+            crime_name=crime.name,
+            district=crime.district,
+            success=False,
+            nerve_spent=crime.nerve_cost,
+            damage=damage,
+            wanted_gained=crime.wanted_gain,
+            consequence="hospital",
+            hospital_until=hospital_until,
+        )
+
+    if consequence_roll <= jail_cutoff:
+        jail_until = send_to_jail(
+            player,
+            duration_seconds=crime.jail_seconds,
+            now=now,
+        )
+
+        return CrimeResult(
+            attempted=True,
+            crime_key=crime.key,
+            crime_name=crime.name,
+            district=crime.district,
+            success=False,
+            nerve_spent=crime.nerve_cost,
+            wanted_gained=crime.wanted_gain,
+            consequence="jail",
+            jail_until=jail_until,
+        )
+
+    damage = rng.randint(
+        crime.min_damage,
+        crime.max_damage,
+    )
+
+    player.health = max(
+        0,
+        player.health - damage,
+    )
 
     return CrimeResult(
         attempted=True,
@@ -176,8 +322,9 @@ def commit_crime(player, crime, rng=None):
         success=False,
         nerve_spent=crime.nerve_cost,
         damage=damage,
+        wanted_gained=crime.wanted_gain,
+        consequence="damage",
     )
-
 
 def crimes_menu(player):
     while True:
