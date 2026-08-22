@@ -1,73 +1,162 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <title>The Smoke</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#090b0d">
+    <title>{{ player.name }} · The Smoke</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
-<body>
+<body class="dashboard-page">
+    <div class="atmosphere atmosphere--one" aria-hidden="true"></div>
+    <div class="atmosphere atmosphere--two" aria-hidden="true"></div>
 
-<div class="dashboard">
+    <div class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="{{ url_for('home') }}" aria-label="The Smoke dashboard">
+                <span class="brand__mark">TS</span>
+                <span class="brand__name">The Smoke</span>
+            </a>
 
-    <header>
-        <h1>THE SMOKE</h1>
+            <div class="topbar__right">
+                <div class="world-status">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span>London</span>
+                    <span class="world-status__label">Online</span>
+                </div>
+                <a class="logout-link" href="{{ url_for('logout') }}">Log out</a>
+            </div>
+        </header>
 
-        <a href="/logout">
-            Logout
-        </a>
-    </header>
+        <main class="dashboard-main">
+            <section class="player-hero" aria-labelledby="player-name">
+                <div class="player-hero__identity">
+                    <p class="eyebrow">Active character</p>
+                    <h1 id="player-name">{{ player.name }}</h1>
+                    <div class="identity-meta">
+                        <span class="level-badge">Level {{ player.level }}</span>
+                        <span>£{{ "{:,}".format(player.money) }} cash</span>
+                    </div>
+                </div>
 
-    <div class="stats">
+                <div class="xp-card">
+                    <div class="progress-heading">
+                        <span>Level progress</span>
+                        <strong>{{ player.xp }} / {{ dashboard.next_level_xp }} XP</strong>
+                    </div>
+                    <div class="progress-track" role="progressbar"
+                         aria-label="Experience progress"
+                         aria-valuenow="{{ dashboard.xp_percent }}"
+                         aria-valuemin="0" aria-valuemax="100">
+                        <span class="progress-fill progress-fill--xp"
+                              style="--progress: {{ dashboard.xp_percent }}%"></span>
+                    </div>
+                    <p>{{ dashboard.next_level_xp - player.xp }} XP until level {{ player.level + 1 }}</p>
+                </div>
+            </section>
 
-        <div>
-            <strong>{{ player.name }}</strong>
-            <span>Level {{ player.level }} · {{ player.xp }} XP</span>\n        </div>
+            <section class="resource-grid" aria-label="Player resources">
+                <article class="resource-card resource-card--health">
+                    <div class="resource-card__header">
+                        <span class="resource-icon" aria-hidden="true">+</span>
+                        <span>Health</span>
+                        <strong>{{ player.health }}/100</strong>
+                    </div>
+                    <div class="progress-track progress-track--thin" role="progressbar"
+                         aria-label="Health" aria-valuenow="{{ dashboard.health_percent }}"
+                         aria-valuemin="0" aria-valuemax="100">
+                        <span class="progress-fill" style="--progress: {{ dashboard.health_percent }}%"></span>
+                    </div>
+                </article>
 
-        <div>
-            Health
-            <strong>{{ player.health }}</strong>
-        </div>
+                <article class="resource-card resource-card--energy">
+                    <div class="resource-card__header">
+                        <span class="resource-icon" aria-hidden="true">ϟ</span>
+                        <span>Energy</span>
+                        <strong>{{ player.energy }}/{{ player.max_energy }}</strong>
+                    </div>
+                    <div class="progress-track progress-track--thin" role="progressbar"
+                         aria-label="Energy" aria-valuenow="{{ dashboard.energy_percent }}"
+                         aria-valuemin="0" aria-valuemax="100">
+                        <span class="progress-fill" style="--progress: {{ dashboard.energy_percent }}%"></span>
+                    </div>
+                </article>
 
-        <div>
-            Energy
-            <strong>{{ player.energy }}</strong>
-        </div>
+                <article class="resource-card resource-card--nerve">
+                    <div class="resource-card__header">
+                        <span class="resource-icon" aria-hidden="true">◆</span>
+                        <span>Nerve</span>
+                        <strong>{{ player.nerve }}/{{ player.max_nerve }}</strong>
+                    </div>
+                    <div class="progress-track progress-track--thin" role="progressbar"
+                         aria-label="Nerve" aria-valuenow="{{ dashboard.nerve_percent }}"
+                         aria-valuemin="0" aria-valuemax="100">
+                        <span class="progress-fill" style="--progress: {{ dashboard.nerve_percent }}%"></span>
+                    </div>
+                </article>
+            </section>
 
-        <div>
-            Nerve
-            <strong>{{ player.nerve }}</strong>
-        </div>
+            <div class="dashboard-columns">
+                <section class="action-panel" aria-labelledby="actions-title">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">City access</p>
+                            <h2 id="actions-title">Choose your next move</h2>
+                        </div>
+                        <span class="section-note">Web actions coming soon</span>
+                    </div>
 
-        <div>
-            Cash
-            <strong>£{{ player.money }}</strong>
-        </div>
+                    <div class="action-grid">
+                        <article class="action-card action-card--active">
+                            <span class="action-card__number">01</span>
+                            <div><h3>Character</h3><p>Review your progress and battle stats.</p></div>
+                            <span class="action-card__status">Active</span>
+                        </article>
+                        <article class="action-card">
+                            <span class="action-card__number">02</span>
+                            <div><h3>Gym</h3><p>Train strength, defence, speed and dexterity.</p></div>
+                            <span class="action-card__status">Terminal</span>
+                        </article>
+                        <article class="action-card">
+                            <span class="action-card__number">03</span>
+                            <div><h3>Crimes</h3><p>Risk your nerve for cash, XP and reputation.</p></div>
+                            <span class="action-card__status">Terminal</span>
+                        </article>
+                        <article class="action-card action-card--locked">
+                            <span class="action-card__number">04</span>
+                            <div><h3>Jobs &amp; inventory</h3><p>Build a career and manage your gear.</p></div>
+                            <span class="action-card__status">Soon</span>
+                        </article>
+                    </div>
+                </section>
 
+                <aside class="side-stack">
+                    <section class="panel battle-panel" aria-labelledby="battle-title">
+                        <div class="section-heading section-heading--compact">
+                            <div><p class="eyebrow">Combat profile</p><h2 id="battle-title">Battle stats</h2></div>
+                        </div>
+                        <dl class="battle-list">
+                            <div><dt>Strength</dt><dd>{{ player.strength }}</dd></div>
+                            <div><dt>Defence</dt><dd>{{ player.defence }}</dd></div>
+                            <div><dt>Speed</dt><dd>{{ player.speed }}</dd></div>
+                            <div><dt>Dexterity</dt><dd>{{ player.dexterity }}</dd></div>
+                        </dl>
+                    </section>
+
+                    <section class="panel dispatch-panel" aria-labelledby="dispatch-title">
+                        <p class="eyebrow">City dispatch</p>
+                        <h2 id="dispatch-title">Welcome back to London</h2>
+                        <p>Your resources recovered while you were away. Keep building momentum—every choice shapes your path through The Smoke.</p>
+                    </section>
+                </aside>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <span>The Smoke · V1 development build</span>
+            <span>Progress saves automatically</span>
+        </footer>
     </div>
-
-    <div class="menu">
-
-        <button>Character</button>
-        <button>Gym</button>
-        <button>Crimes</button>
-        <button>Jobs</button>
-        <button>Inventory</button>
-
-    </div>
-
-    <section class="panel">
-
-        <h2>Welcome to London</h2>
-
-        <p>
-            The city is yours to explore.
-            Build your reputation, train your character,
-            make money and rise through The Smoke.
-        </p>
-
-    </section>
-
-</div>
-
 </body>
 </html>

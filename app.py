@@ -8,6 +8,7 @@ from database.users import get_user_by_username
 from database.players import get_player_by_user_id
 from utils.security import verify_password
 from game.player import Player
+from game.progression import xp_required_for_level
 
 
 app = Flask(__name__)
@@ -19,6 +20,13 @@ app.config.update(
 )
 
 create_tables()
+
+
+def percentage(value, maximum):
+    if maximum <= 0:
+        return 0
+
+    return max(0, min(100, round((value / maximum) * 100)))
 
 
 @app.route("/")
@@ -33,9 +41,23 @@ def home():
 
     player = Player(*player_data)
 
+    current_level_xp = xp_required_for_level(player.level)
+    next_level_xp = xp_required_for_level(player.level + 1)
+    xp_into_level = player.xp - current_level_xp
+    xp_for_next_level = next_level_xp - current_level_xp
+
+    dashboard = {
+        "health_percent": percentage(player.health, 100),
+        "energy_percent": percentage(player.energy, player.max_energy),
+        "nerve_percent": percentage(player.nerve, player.max_nerve),
+        "xp_percent": percentage(xp_into_level, xp_for_next_level),
+        "next_level_xp": next_level_xp,
+    }
+
     return render_template(
         "dashboard.html",
-        player=player
+        player=player,
+        dashboard=dashboard,
     )
 
 
