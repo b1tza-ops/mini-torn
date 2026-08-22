@@ -17,7 +17,9 @@ class Player:
         max_nerve,
         last_energy_update,
         last_nerve_update,
-        xp
+        xp,
+        crime_progress=None,
+        district_reputation=None
     ):
         
         self.id = player_id
@@ -37,6 +39,8 @@ class Player:
         self.last_energy_update = last_energy_update
         self.last_nerve_update = last_nerve_update
         self.xp = xp
+        self.crime_progress = crime_progress or {}
+        self.district_reputation = district_reputation or {}
 
 
 
@@ -55,6 +59,5 @@ class Player:
         print("Defence:", self.defence)
         print("Speed:", self.speed)
         print("Dexterity:", self.dexterity)
-
 
 

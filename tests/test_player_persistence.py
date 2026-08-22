@@ -1,7 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from database.players import (
     create_player,
@@ -12,6 +12,7 @@ from database.setup import create_tables
 from database.users import create_user
 from game.player import Player
 from game.progression import award_xp
+from game.crimes import commit_crime, get_crime
 
 
 class PlayerPersistenceTests(unittest.TestCase):
@@ -47,6 +48,43 @@ class PlayerPersistenceTests(unittest.TestCase):
                 self.assertEqual(reloaded_player.defence, 10)
                 self.assertEqual(reloaded_player.speed, 10)
                 self.assertEqual(reloaded_player.dexterity, 10)
+
+    def test_crime_progress_and_district_reputation_persist(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            database_path = Path(temp_dir) / "data" / "game.db"
+
+            with patch("database.connection.DB_PATH", database_path):
+                create_tables()
+
+                user_id = create_user(
+                    username="crime_player",
+                    email="crime@example.com",
+                    password_hash="test_hash"
+                )
+                create_player(user_id, "Crime Character")
+
+                player = Player(*get_player_by_user_id(user_id))
+                crime = get_crime("camden_shoplift")
+                rng = Mock()
+                rng.randint.side_effect = [1, 40]
+
+                commit_crime(player, crime, rng=rng)
+                save_player(player)
+
+                reloaded = Player(*get_player_by_user_id(user_id))
+
+                self.assertEqual(
+                    reloaded.crime_progress[crime.key],
+                    {
+                        "xp": crime.crime_xp_reward,
+                        "attempts": 1,
+                        "successes": 1,
+                    },
+                )
+                self.assertEqual(
+                    reloaded.district_reputation["Camden"],
+                    crime.reputation_reward,
+                )
 
 
 if __name__ == "__main__":

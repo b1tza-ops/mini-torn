@@ -41,6 +41,34 @@ def create_tables():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS player_crime_progress (
+            player_id INTEGER NOT NULL,
+            crime_key TEXT NOT NULL,
+            xp INTEGER NOT NULL DEFAULT 0 CHECK (xp >= 0),
+            attempts INTEGER NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+            successes INTEGER NOT NULL DEFAULT 0 CHECK (successes >= 0),
+
+            PRIMARY KEY (player_id, crime_key),
+            FOREIGN KEY (player_id)
+                REFERENCES players(id)
+                ON DELETE CASCADE
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS player_district_reputation (
+            player_id INTEGER NOT NULL,
+            district TEXT NOT NULL,
+            reputation INTEGER NOT NULL DEFAULT 0,
+
+            PRIMARY KEY (player_id, district),
+            FOREIGN KEY (player_id)
+                REFERENCES players(id)
+                ON DELETE CASCADE
+        )
+    """)
+
     
     conn.commit()
     conn.close()
