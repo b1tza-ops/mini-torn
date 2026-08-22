@@ -1,6 +1,7 @@
 import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock
+from datetime import datetime, timezone
 
 from game.crimes import (
     CRIMES,
@@ -28,6 +29,10 @@ class CrimeEngineTests(unittest.TestCase):
             level=1,
             crime_progress={},
             district_reputation={},
+            wanted_level=0,
+            last_wanted_update=None,
+            jail_until=None,
+            hospital_until=None,
         )
 
     def test_success_returns_structured_result_and_progress(self):
@@ -53,6 +58,11 @@ class CrimeEngineTests(unittest.TestCase):
                 "successes": 1,
             },
         )
+
+        self.assertEqual(
+            player.wanted_level,
+            crime.wanted_gain,
+        )
         self.assertEqual(
             player.district_reputation["Soho"],
             crime.reputation_reward,
@@ -62,7 +72,7 @@ class CrimeEngineTests(unittest.TestCase):
         player = self.make_player()
         crime = get_crime("brixton_warehouse")
         rng = Mock()
-        rng.randint.side_effect = [100, 8]
+        rng.randint.side_effect = [100, 100, 8]
 
         result = commit_crime(player, crime, rng=rng)
 
@@ -75,6 +85,10 @@ class CrimeEngineTests(unittest.TestCase):
         self.assertEqual(
             player.crime_progress[crime.key],
             {"xp": 0, "attempts": 1, "successes": 0},
+        )
+        self.assertEqual(
+            player.wanted_level,
+            crime.wanted_gain,
         )
 
     def test_insufficient_nerve_does_not_attempt_or_change_player(self):
@@ -90,6 +104,80 @@ class CrimeEngineTests(unittest.TestCase):
         self.assertEqual(player.money, 100)
         self.assertEqual(player.crime_progress, {})
         rng.randint.assert_not_called()
+
+    def test_failed_crime_can_send_player_to_jail(self):
+        player = self.make_player()
+        crime = get_crime("camden_shoplift")
+        rng = Mock()
+        rng.randint.side_effect = [100, 10]
+
+        now = datetime(
+            2026,
+            8,
+            22,
+            15,
+            0,
+            tzinfo=timezone.utc,
+        )
+
+        result = commit_crime(
+            player,
+            crime,
+            rng=rng,
+            now=now,
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(result.consequence, "jail")
+        self.assertEqual(
+            result.jail_until,
+            "2026-08-22 15:01:00",
+        )
+        self.assertEqual(
+            player.jail_until,
+            "2026-08-22 15:01:00",
+        )
+        self.assertEqual(player.health, 100)
+        self.assertEqual(player.money, 100)
+
+    def test_failed_crime_can_send_player_to_hospital(self):
+        player = self.make_player()
+        crime = get_crime("camden_shoplift")
+        rng = Mock()
+        rng.randint.side_effect = [100, 1, 9]
+
+        now = datetime(
+            2026,
+            8,
+            22,
+            15,
+            0,
+            tzinfo=timezone.utc,
+        )
+
+        result = commit_crime(
+            player,
+            crime,
+            rng=rng,
+            now=now,
+        )
+
+        self.assertFalse(result.success)
+        self.assertEqual(
+            result.consequence,
+            "hospital",
+        )
+        self.assertEqual(result.damage, 9)
+        self.assertEqual(player.health, 91)
+        self.assertEqual(
+            result.hospital_until,
+            "2026-08-22 15:01:00",
+        )
+        self.assertEqual(
+            player.hospital_until,
+            "2026-08-22 15:01:00",
+        )
+        self.assertEqual(player.money, 100)
 
 
 if __name__ == "__main__":

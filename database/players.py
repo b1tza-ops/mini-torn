@@ -60,7 +60,11 @@ def get_player_by_user_id(user_id):
             max_nerve,
             last_energy_update,
             last_nerve_update,
-            xp
+            xp,
+            wanted_level,
+            last_wanted_update,
+            jail_until,
+            hospital_until
         FROM players
         WHERE user_id = ?
         """,
@@ -176,7 +180,11 @@ def save_player(player):
             max_nerve = ?,
             last_energy_update = ?,
             last_nerve_update = ?,
-            xp = ?
+            xp = ?,
+            wanted_level = ?,
+            last_wanted_update = ?,
+            jail_until = ?,
+            hospital_until = ?
         WHERE id = ?
         """,
         (
@@ -195,6 +203,10 @@ def save_player(player):
             player.last_energy_update,
             player.last_nerve_update,
             player.xp,
+            player.wanted_level,
+            player.last_wanted_update,
+            player.jail_until,
+            player.hospital_until,
             player.id
         )
     )

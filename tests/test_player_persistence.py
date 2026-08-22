@@ -1,7 +1,14 @@
+from datetime import datetime, timezone
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+from game.status import (
+    add_wanted,
+    send_to_hospital,
+    send_to_jail,
+)
 
 from database.players import (
     create_player,
@@ -86,6 +93,70 @@ class PlayerPersistenceTests(unittest.TestCase):
                     crime.reputation_reward,
                 )
 
+
+
+    def test_player_status_survives_reload(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            database_path = Path(temp_dir) / "data" / "game.db"
+
+            with patch("database.connection.DB_PATH", database_path):
+                create_tables()
+
+                user_id = create_user(
+                    username="status_player",
+                    email="status@example.com",
+                    password_hash="test_hash",
+                )
+
+                create_player(user_id, "Status Character")
+                player = Player(*get_player_by_user_id(user_id))
+
+                now = datetime(
+                    2026,
+                    8,
+                    22,
+                    14,
+                    0,
+                    tzinfo=timezone.utc,
+                )
+
+                add_wanted(
+                    player,
+                    amount=7,
+                    now=now,
+                )
+
+                send_to_jail(
+                    player,
+                    duration_seconds=300,
+                    now=now,
+                )
+
+                send_to_hospital(
+                    player,
+                    duration_seconds=600,
+                    now=now,
+                )
+
+                save_player(player)
+
+                reloaded = Player(
+                    *get_player_by_user_id(user_id)
+                )
+
+                self.assertEqual(reloaded.wanted_level, 7)
+                self.assertEqual(
+                    reloaded.last_wanted_update,
+                    "2026-08-22 14:00:00",
+                )
+                self.assertEqual(
+                    reloaded.jail_until,
+                    "2026-08-22 14:05:00",
+                )
+                self.assertEqual(
+                    reloaded.hospital_until,
+                    "2026-08-22 14:10:00",
+                )
 
 if __name__ == "__main__":
     unittest.main()
