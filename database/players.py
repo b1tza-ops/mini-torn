@@ -114,12 +114,42 @@ def get_player_by_user_id(user_id):
     )
 
     conn.commit()
+
+    cursor.execute(
+        """
+        SELECT crime_key, xp, attempts, successes
+        FROM player_crime_progress
+        WHERE player_id = ?
+        """,
+        (player_data[0],)
+    )
+    crime_progress = {
+        crime_key: {
+            "xp": xp,
+            "attempts": attempts,
+            "successes": successes,
+        }
+        for crime_key, xp, attempts, successes in cursor.fetchall()
+    }
+
+    cursor.execute(
+        """
+        SELECT district, reputation
+        FROM player_district_reputation
+        WHERE player_id = ?
+        """,
+        (player_data[0],)
+    )
+    district_reputation = dict(cursor.fetchall())
+
     conn.close()
 
     player_data[6] = energy
     player_data[11] = nerve
     player_data[14] = energy_update
     player_data[15] = nerve_update
+
+    player_data.extend([crime_progress, district_reputation])
 
     return tuple(player_data)
 
@@ -167,6 +197,53 @@ def save_player(player):
             player.xp,
             player.id
         )
+    )
+
+    cursor.execute(
+        "DELETE FROM player_crime_progress WHERE player_id = ?",
+        (player.id,)
+    )
+    cursor.executemany(
+        """
+        INSERT INTO player_crime_progress (
+            player_id,
+            crime_key,
+            xp,
+            attempts,
+            successes
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        [
+            (
+                player.id,
+                crime_key,
+                progress["xp"],
+                progress["attempts"],
+                progress["successes"],
+            )
+            for crime_key, progress in player.crime_progress.items()
+        ]
+    )
+
+    cursor.execute(
+        "DELETE FROM player_district_reputation WHERE player_id = ?",
+        (player.id,)
+    )
+    cursor.executemany(
+        """
+        INSERT INTO player_district_reputation (
+            player_id,
+            district,
+            reputation
+        )
+        VALUES (?, ?, ?)
+        """,
+        [
+            (player.id, district, reputation)
+            for district, reputation
+            in player.district_reputation.items()
+        ]
     )
 
     conn.commit()

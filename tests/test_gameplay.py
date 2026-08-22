@@ -1,8 +1,8 @@
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock
 
-from game.crimes import commit_crime
+from game.crimes import commit_crime, get_crime
 from game.gym import train
 
 
@@ -30,25 +30,29 @@ class GymTests(unittest.TestCase):
 
 
 class CrimeTests(unittest.TestCase):
-    @patch("game.crimes.random.randint", side_effect=[100, 10])
-    def test_failed_crime_does_not_make_health_negative(self, _randint):
-        player = SimpleNamespace(nerve=20, money=0, health=5)
+    def test_failed_crime_does_not_make_health_negative(self):
+        player = SimpleNamespace(
+            nerve=20,
+            money=0,
+            health=5,
+            xp=0,
+            level=1,
+        )
+        rng = Mock()
+        rng.randint.side_effect = [100, 10]
 
-        commit_crime(
+        result = commit_crime(
             player,
-            name="Test crime",
-            nerve_cost=2,
-            success_chance=0,
-            xp_reward=10,
-            min_reward=1,
-            max_reward=1,
+            get_crime("camden_shoplift"),
+            rng=rng,
         )
 
         self.assertEqual(player.health, 0)
         self.assertEqual(player.nerve, 18)
+        self.assertFalse(result.success)
+        self.assertEqual(result.damage, 10)
 
-    @patch("game.crimes.random.randint", side_effect=[1, 40])
-    def test_successful_crime_awards_money_xp_and_level(self, _randint):
+    def test_successful_crime_awards_money_xp_and_level(self):
         player = SimpleNamespace(
             nerve=20,
             money=0,
@@ -56,21 +60,21 @@ class CrimeTests(unittest.TestCase):
             xp=95,
             level=1,
         )
+        rng = Mock()
+        rng.randint.side_effect = [1, 40]
 
-        commit_crime(
+        result = commit_crime(
             player,
-            name="Test crime",
-            nerve_cost=2,
-            success_chance=100,
-            xp_reward=10,
-            min_reward=20,
-            max_reward=60,
+            get_crime("camden_shoplift"),
+            rng=rng,
         )
 
         self.assertEqual(player.nerve, 18)
         self.assertEqual(player.money, 40)
         self.assertEqual(player.xp, 105)
         self.assertEqual(player.level, 2)
+        self.assertTrue(result.success)
+        self.assertEqual(result.cash_reward, 40)
 
 
 if __name__ == "__main__":
