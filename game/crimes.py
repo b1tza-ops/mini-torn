@@ -5,6 +5,7 @@ from game.progression import award_xp
 
 from game.status import (
     add_wanted,
+    get_active_restriction,
     send_to_hospital,
     send_to_jail,
 )
@@ -87,7 +88,7 @@ CRIMES = (
         hospital_chance=8,
         hospital_seconds=120,
     ),
-        CrimeDefinition(
+    CrimeDefinition(
         key="brixton_phone_snatch",
         name="Snatch a phone in Brixton",
         district="Brixton",
@@ -328,6 +329,32 @@ def _resolve_failed_crime(
 
 def crimes_menu(player):
     while True:
+        restriction = get_active_restriction(player)
+
+        if restriction is not None:
+            remaining_minutes = (
+                restriction.remaining_seconds + 59
+            ) // 60
+
+            if restriction.kind == "jail":
+                print(
+                    "\nYou cannot commit crimes while in jail."
+                )
+                print(
+                    f"Release in approximately "
+                    f"{remaining_minutes} minute(s)."
+                )
+            else:
+                print(
+                    "\nYou cannot commit crimes while in hospital."
+                )
+                print(
+                    f"Discharge in approximately "
+                    f"{remaining_minutes} minute(s)."
+                )
+
+            return
+
         print("\n===== CRIMES =====")
         print("Nerve:", player.nerve)
 
@@ -367,6 +394,10 @@ def display_crime_result(player, result):
         return
 
     print("\nAttempting:", result.crime_name)
+    print(
+        f"Wanted +{result.wanted_gained} "
+        f"(current level: {player.wanted_level})"
+    )
 
     if result.success:
         print("Crime successful!")
@@ -379,10 +410,26 @@ def display_crime_result(player, result):
         )
 
         if result.levels_gained > 0:
-            print(f"Level up! You are now level {player.level}.")
+            print(
+                f"Level up! You are now level "
+                f"{player.level}."
+            )
+
+        return
+
+    print("Crime failed!")
+
+    if result.consequence == "jail":
+        print("You were arrested and sent to jail.")
+        print("Release time:", result.jail_until)
+
+    elif result.consequence == "hospital":
+        print("You lost", result.damage, "health.")
+        print("You were taken to hospital.")
+        print("Discharge time:", result.hospital_until)
+
     else:
-        print("Crime failed!")
-        print("You lost", result.damage, "health")
+        print("You lost", result.damage, "health.")
 
 
 def _crime_progress_for(player, crime_key):
