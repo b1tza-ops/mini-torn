@@ -57,12 +57,11 @@ class CrimeEngineTests(unittest.TestCase):
                 "attempts": 1,
                 "successes": 1,
             },
+        )
 
         self.assertEqual(
             player.wanted_level,
             crime.wanted_gain,
-        )
-
         )
         self.assertEqual(
             player.district_reputation["Soho"],
